@@ -3,28 +3,53 @@
 var score = 0;
 var scoreText;
 var statusText;
+var distance = 0;
+var distanceText;
+var powerLevel = 0;
+var powerText;
+var winDistance = 350;
+var bulletTimer = 1;
+var bulletCounter = 0;
 
 var playState = {
 
     create : function() {
         //var this.score = 0;
         //scoreText;
+        bulletCounter = bulletTimer;
+
         game.add.sprite(0,0, 'sky');
+
+        background = this.add.tileSprite(0,100,this.game.width, this.game.height,'Mountains');
+        background.autoScroll(-10, 0);
 
         this.initGround();
 
         this.initPlayer();
 
-        this.initStars();
+        stars = game.add.group();
+        stars.enableBody = true;
+        
+        enemybullets = game.add.group();
+        enemybullets.enableBody = true;
 
+        powerups = game.add.group();
+        powerups.enableBody = true;
 
+        //this.initStars();
 
-        scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
-        statusText = game.add.text((game.world.height / 2) - 16, (game.world.width / 2), "", { fontSize: '32px', fill: '#F00' });
+        scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#A2D187' });
 
+        distanceText = game.add.text(200, 16, 'Distance: 0', { fontSize: '32px', fill: '#A2D187' });
+
+        powerText = game.add.text(450, 16, 'Power: 0', {fontSize: '32px', fill: '#A2D187'});
+
+        statusText = game.add.text((game.world.width / 2) - 250, (game.world.height / 2) - 16, "", { fontSize: '100px', fill: '#070F00' });
+
+        game.time.events.loop(Phaser.Timer.SECOND * 2, this.createShooter, this);
+        game.time.events.loop(Phaser.Timer.SECOND * 2, this.createSeeker, this);
         game.time.events.loop(Phaser.Timer.SECOND * 2, this.createStar, this);
-
-        game.add.sprite(0, 0, 'star');
+        game.time.events.loop(Phaser.Timer.SECOND * 2, this.createShooter, this);
 
         bullets = game.add.group()
         bullets.enableBody = true;
@@ -38,14 +63,20 @@ var playState = {
     update : function() {
         game.physics.arcade.collide(player, platforms);
         game.physics.arcade.collide(stars, platforms);
+        game.physics.arcade.overlap(player, enemybullets, this.playerHit, null, this);
         game.physics.arcade.overlap(player, stars, this.playerHit, null, this);
         game.physics.arcade.overlap(bullets, stars, this.collectStar, null, this);
+        game.physics.arcade.overlap(player, powerups, this.collectPowerup, null, this);
+        stars.forEach(function(thing){
+            this.game.physics.arcade.moveToObject(thing, player, 100);
+            this.playState.updateShooter(thing);
+        });
         this.updatePlayer();
     },
 
     initPlayer : function(){
                     // The player and its settings
-        player = game.add.sprite(32, game.world.height - 150, 'dude');
+        player = game.add.sprite(32, game.world.height - 150, 'jetpackDog');
 
         //  We need to enable physics on the player
         game.physics.arcade.enable(player);
@@ -54,10 +85,6 @@ var playState = {
         player.body.bounce.y = 0.2;
         player.body.gravity.y = 300;
         player.body.collideWorldBounds = true;
-
-        //  Our two animations, walking left and right.
-        player.animations.add('left', [0, 1, 2, 3], 10, true);
-        player.animations.add('right', [5, 6, 7, 8], 10, true);
 
         return player;
     },
@@ -86,10 +113,6 @@ var playState = {
     },
 
     initStars : function(){
-        stars = game.add.group();
-
-        stars.enableBody = true;
-
         //  Here we'll create 12 of them evenly spaced apart
         for (var i = 0; i < 12; i++)
         {
@@ -109,26 +132,41 @@ var playState = {
     updatePlayer : function(){
                     //  Reset the players velocity (movement)
         player.body.velocity.x = 0;
-        player.frame = 6;
+        //player.frame = 6;
 
         //  Allow the player to jump if they are touching the ground.
         if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
         {
-            player.body.gravity.y = -300;
+            player.body.gravity.y = -500;
+
         }
         else//(this.spaceKey.isUp())
         {
-            player.body.gravity.y = 300;
+            player.body.gravity.y = 350;
         }
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.Z)){
             this.fireBullet();
         }
+        else{
+            bulletCounter = 0;
+        }
 
+        if(distance >= winDistance){
+            statusText.text = "You Won!";
+        }
+        else
+        {
+            distance += 0.1;
+            distanceText.text = 'Distance: ' + Math.floor(distance);
+        }
 
     },
 
     collectStar : function(bullet, star){
+        if(game.rnd.integerInRange(0, 4) == 3){
+            this.createPowerUp(star);
+        }
         star.kill();
         bullet.kill();
         score += 10;
@@ -141,13 +179,53 @@ var playState = {
     },
 
     createStar : function(){
-        var star = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'star');
+        var star = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy1');
         star.body.velocity.x = -200;
     },
 
+    createSeeker: function(){
+        var seeker = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy3');
+        this.game.physics.arcade.moveToObject(seeker, player, 400);
+
+        //            this.game.physics.arcade.moveToObject(this.enemyLaser, player.ship, 150);
+    },
+
+    createShooter: function(){
+        var shooter = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy2');
+        shooter.body.velocity.x = -100;
+        shooter.bulletCounter = 0;
+        shooter.bulletTimer = 1;
+    },
+
+    updateShooter: function(enemy){
+        //shoot every once in a while? float around? I dunno
+        if(enemy.bulletCounter <= 0){
+            var enemyBullet = enemybullets.create(enemy.x, enemy.y, 'bullet');
+            enemyBullet.body.velocity.x = -500;
+            enemy.bulletCounter = enemy.bulletTimer;
+            console.log("Fired A Bullet????");
+        }
+        enemy.bulletTimer -= 0.1;
+    },
+
+    createPowerUp: function(enemy){
+        var powerUp = powerups.create(enemy.x, enemy.y, 'powerup');
+        powerUp.body.velocity.x = -150;
+    },
+
     fireBullet : function(){
-        var bullet = bullets.create(player.x, player.y, 'diamond');
-        bullet.body.velocity.x = 400;
+        if(bulletCounter <= 0){
+            var bullet = bullets.create(player.x, player.y, 'bullet');
+            bullet.body.velocity.x = 400 + (powerLevel * 50);
+            bulletCounter = bulletTimer - (powerLevel / 10);
+        }
+        bulletCounter -= 0.1;
+    },
+
+    collectPowerup : function(player, powerup){
+        powerup.kill();
+        powerLevel += 1;
+        powerText.text = "Power: " + powerLevel;
     }
 
 };
