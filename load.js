@@ -4,6 +4,7 @@ var loadState = {
       game.load.image('star', 'assets/star.png');
       game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
       game.load.image('ground', 'assets/platform2.png');
+      game.load.image('debris', 'assets/debris.png');
       game.load.image('diamond', 'assets/diamond.png');
       game.load.image('logo', 'assets/JetPackDogLogo.png');
       game.load.image('powerup', 'assets/powerUp.png');

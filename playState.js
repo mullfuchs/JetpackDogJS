@@ -10,6 +10,7 @@ var powerText;
 var winDistance = 350;
 var bulletTimer = 1;
 var bulletCounter = 0;
+var gameOver = false;
 
 var playState = {
 
@@ -29,6 +30,9 @@ var playState = {
 
         stars = game.add.group();
         stars.enableBody = true;
+
+        creepers = game.add.group();
+        creepers.enableBody = true;
         
         enemybullets = game.add.group();
         enemybullets.enableBody = true;
@@ -36,7 +40,9 @@ var playState = {
         powerups = game.add.group();
         powerups.enableBody = true;
 
-        //this.initStars();
+        emitter = game.add.emitter(0, 0, 100);
+        emitter.makeParticles('diamond');
+        emitter.gravity = 200;
 
         scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#A2D187' });
 
@@ -66,8 +72,10 @@ var playState = {
         game.physics.arcade.overlap(player, enemybullets, this.playerHit, null, this);
         game.physics.arcade.overlap(player, stars, this.playerHit, null, this);
         game.physics.arcade.overlap(bullets, stars, this.collectStar, null, this);
+        game.physics.arcade.overlap(player, creepers, this.playerHit, null, this);
+        game.physics.arcade.overlap(bullets, creepers, this.collectStar, null, this);
         game.physics.arcade.overlap(player, powerups, this.collectPowerup, null, this);
-        stars.forEach(function(thing){
+        creepers.forEach(function(thing){
             this.game.physics.arcade.moveToObject(thing, player, 100);
             this.playState.updateShooter(thing);
         });
@@ -138,6 +146,11 @@ var playState = {
         if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
         {
             player.body.gravity.y = -500;
+            
+            if(gameOver){
+                this.resetScene();
+                game.state.start('play');
+            }
 
         }
         else//(this.spaceKey.isUp())
@@ -164,6 +177,8 @@ var playState = {
     },
 
     collectStar : function(bullet, star){
+
+        this.particleBurst(star);
         if(game.rnd.integerInRange(0, 4) == 3){
             this.createPowerUp(star);
         }
@@ -175,6 +190,7 @@ var playState = {
 
     playerHit : function(player, star){
         player.kill();
+        gameOver = true;
         statusText.text = 'GAME OVER';
     },
 
@@ -191,7 +207,7 @@ var playState = {
     },
 
     createShooter: function(){
-        var shooter = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy2');
+        var shooter = creepers.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy2');
         shooter.body.velocity.x = -100;
         shooter.bulletCounter = 0;
         shooter.bulletTimer = 1;
@@ -226,6 +242,37 @@ var playState = {
         powerup.kill();
         powerLevel += 1;
         powerText.text = "Power: " + powerLevel;
+    },
+
+    resetScene : function(){
+        score = 0;
+        distance = 0;
+        powerLevel = 0;
+        gameOver = false;
+    },
+
+    particleBurst : function(pointer) {
+        var particles = this.makeEmitter();
+
+        particles.x = pointer.x;
+        particles.y = pointer.y;
+
+        particles.start(true, 4000, null, 10);
+
+        //  And 2 seconds later we'll destroy the emitter
+        this.game.time.events.add(2000, this.destroyEmitter, this, particles);
+
+    },
+
+    destroyEmitter : function(inEmitter){
+        inEmitter.destroy();
+    },
+
+    makeEmitter : function () {
+        emitter = game.add.emitter(0, 0, 100);
+        emitter.makeParticles('debris');
+        emitter.gravity = 200;
+        return emitter;
     }
 
 };
