@@ -3,21 +3,22 @@
 var score = 0;
 var scoreText;
 var statusText;
-var distance = 0;
+var distance = 350;
 var distanceText;
 var powerLevel = 0;
 var powerText;
-var winDistance = 350;
+var winDistance = 200;
 var bulletTimer = 0.3;
 var bulletCounter = 0;
 var gameOver = false;
 var pause = false;
+var bulletsFired = 0;
+var hitCounter = 0;
 
 var playState = {
 
     create : function() {
-        //var this.score = 0;
-        //scoreText;
+
         bulletCounter = bulletTimer;
 
         game.add.sprite(0,0, 'sky');
@@ -61,26 +62,26 @@ var playState = {
         gunshot = game.add.audio('gunshot');
         hitsound = game.add.audio('hitsound');
 
-        scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#A2D187' });
+        scoreText = game.add.text(16, 20, 'Score: 0', { fontSize: '32px', fill: '#A2D187' });
 
-        distanceText = game.add.text(200, 16, 'Distance: 0', { fontSize: '32px', fill: '#A2D187' });
+        distanceText = game.add.text(200, 20, 'Distance: 0', { fontSize: '32px', fill: '#A2D187' });
 
-        powerText = game.add.text(450, 16, 'Power: 0', {fontSize: '32px', fill: '#A2D187'});
+        powerText = game.add.text(450, 20, 'Power: 0', {fontSize: '32px', fill: '#A2D187'});
 
         statusText = game.add.text((game.world.width / 2) - 250, (game.world.height / 2) - 16, "", { fontSize: '100px', fill: '#070F00' });
 
         game.time.events.loop(Phaser.Timer.SECOND * 2, this.createShooter, this);
         game.time.events.loop(Phaser.Timer.SECOND * 2, this.createSeeker, this);
-        game.time.events.loop(Phaser.Timer.SECOND * 2, this.createStar, this);
+        game.time.events.loop(Phaser.Timer.SECOND * 0.5, this.createStar, this);
         game.time.events.loop(Phaser.Timer.SECOND * 2, this.createShooter, this);
 
         bullets = game.add.group()
         bullets.enableBody = true;
 
-        //cursors = game.input.keyboard.createCursorKeys();
-        //this.spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR, Phaser.Keyboard.Z]);
         game.world.setBounds(-20, 20, game.width + 20, game.height + 20);
+        this.unPause();
+        distance = winDistance;
     },
 
     update : function() {
@@ -101,13 +102,8 @@ var playState = {
     },
 
     initPlayer : function(){
-                    // The player and its settings
         player = game.add.sprite(32, game.world.height - 150, 'jetpackDog');
-
-        //  We need to enable physics on the player
         game.physics.arcade.enable(player);
-
-        //  Player physics properties. Give the little guy a slight bounce.
         player.body.bounce.y = 0.2;
         player.body.gravity.y = 300;
         player.body.collideWorldBounds = true;
@@ -118,22 +114,12 @@ var playState = {
     initGround : function(){
         platforms = game.add.group();
         platforms.enableBody = true;
-
-        
         var ground = platforms.create(0, game.world.height - 64, 'ground');
-
-        //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
         ground.scale.setTo(2, 2);
-
-        //  This stops it from falling away when you jump on it
         ground.body.immovable = true;
-
         var celing = platforms.create(0, 0, 'ground');
-
         celing.scale.setTo(2, 2);
-
         celing.body.immovable = true;
-
         game.physics.enable(platforms);
         return platforms;
     },
@@ -156,24 +142,22 @@ var playState = {
     },
 
     updatePlayer : function(){
-                    //  Reset the players velocity (movement)
         player.body.velocity.x = 0;
-        //player.frame = 6;
-
-        //  Allow the player to jump if they are touching the ground.
+        
         if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
         {
             player.body.gravity.y = -500;
-            
             if(gameOver){
                 this.resetScene();
                 game.state.start('play');
             }
 
         }
-        else//(this.spaceKey.isUp())
+        else
         {
-            player.body.gravity.y = 350;
+            if(!gameOver){
+                player.body.gravity.y = 350;
+            }
         }
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.Z)){
@@ -183,13 +167,16 @@ var playState = {
             bulletCounter = 0;
         }
 
-        if(distance >= winDistance){
+        if(distance <= 0){
             statusText.text = "You Won!";
+            game.state.start('winScreen');
         }
         else
         {
-            distance += 0.1;
-            distanceText.text = 'Distance: ' + Math.floor(distance);
+            if(!gameOver){
+                distance -= 0.1;
+                distanceText.text = 'Distance: ' + Math.floor(distance);
+            }
         }
 
     },
@@ -200,7 +187,7 @@ var playState = {
         star.x += 3;
         this.hitFlash(star);
         bullet.kill();
-
+        hitCounter++;
         if(star.health <= 0){
             this.particleBurst(star);
             if(game.rnd.integerInRange(0, 4) == 3){
@@ -232,8 +219,6 @@ var playState = {
         var seeker = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy3');
         seeker.health = 3;
         this.game.physics.arcade.moveToObject(seeker, player, 400);
-
-        //            this.game.physics.arcade.moveToObject(this.enemyLaser, player.ship, 150);
     },
 
     createShooter: function(){
@@ -245,7 +230,6 @@ var playState = {
     },
 
     updateShooter: function(enemy){
-        //shoot every once in a while? float around? I dunno
         if(enemy.bulletCounter <= 0){
             var enemyBullet = enemybullets.create(enemy.x, enemy.y, 'bullet');
             enemyBullet.body.velocity.x = -500;
@@ -261,14 +245,17 @@ var playState = {
     },
 
     fireBullet : function(){
-        if(bulletCounter <= 0){
+        if(bulletCounter <= 0 && !gameOver){
             this.cameraShake();
             gunshot.play();
             var bullet = bullets.create(player.x + 32, player.y + 15 + (game.rnd.integerInRange(-5, 5)), 'bullet');
             bullet.body.velocity.x = 800;
+            bullet.body.velocity.y = player.body.velocity.y; 
+            bullet.outOfBoundsKill = true;
             bullet.body.gravity.y = game.rnd.integerInRange(-100,100);
             bulletCounter = bulletTimer;
             this.muzzleFlash(player);
+            bulletsFired ++;
         }
         bulletCounter -= 0.1;
     },
@@ -281,7 +268,7 @@ var playState = {
 
     resetScene : function(){
         score = 0;
-        distance = 0;
+        distance = winDistance;
         powerLevel = 0;
         gameOver = false;
     },
@@ -293,7 +280,6 @@ var playState = {
         particles.y = pointer.y;
         particles.start(true, 4000, null, 10);
 
-        //  And 2 seconds later we'll destroy the emitter
         this.game.time.events.add(2000, this.destroyEmitter, this, particles);
 
     },
