@@ -8,9 +8,10 @@ var distanceText;
 var powerLevel = 0;
 var powerText;
 var winDistance = 350;
-var bulletTimer = 1;
+var bulletTimer = 0.3;
 var bulletCounter = 0;
 var gameOver = false;
+var pause = false;
 
 var playState = {
 
@@ -21,8 +22,14 @@ var playState = {
 
         game.add.sprite(0,0, 'sky');
 
+        background = this.add.tileSprite(0,80,this.game.width, this.game.height,'Mountains2');
+        background.autoScroll(-5, 0);        
+
         background = this.add.tileSprite(0,100,this.game.width, this.game.height,'Mountains');
-        background.autoScroll(-10, 0);
+        background.autoScroll(-10, 0);        
+
+        background = this.add.tileSprite(0,450,this.game.width, 100,'TreeBG');
+        background.autoScroll(-20, 0);
 
         this.initGround();
 
@@ -40,9 +47,19 @@ var playState = {
         powerups = game.add.group();
         powerups.enableBody = true;
 
+        bodies = game.add.group();
+        bodies.enableBody = true;
+
         emitter = game.add.emitter(0, 0, 100);
         emitter.makeParticles('diamond');
         emitter.gravity = 200;
+
+        flash = game.add.emitter(0, 0, 100);
+        flash.makeParticles('flash');
+        flash.gravity = 0;
+
+        gunshot = game.add.audio('gunshot');
+        hitsound = game.add.audio('hitsound');
 
         scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#A2D187' });
 
@@ -63,12 +80,13 @@ var playState = {
         //cursors = game.input.keyboard.createCursorKeys();
         //this.spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR, Phaser.Keyboard.Z]);
-
+        game.world.setBounds(-20, 20, game.width + 20, game.height + 20);
     },
 
     update : function() {
         game.physics.arcade.collide(player, platforms);
         game.physics.arcade.collide(stars, platforms);
+        game.physics.arcade.collide(bodies, platforms);
         game.physics.arcade.overlap(player, enemybullets, this.playerHit, null, this);
         game.physics.arcade.overlap(player, stars, this.playerHit, null, this);
         game.physics.arcade.overlap(bullets, stars, this.collectStar, null, this);
@@ -177,30 +195,42 @@ var playState = {
     },
 
     collectStar : function(bullet, star){
-
-        this.particleBurst(star);
-        if(game.rnd.integerInRange(0, 4) == 3){
-            this.createPowerUp(star);
-        }
-        star.kill();
+        hitsound.play();
+        star.health -= 1;
+        star.x += 3;
+        this.hitFlash(star);
         bullet.kill();
-        score += 10;
-        scoreText.text = 'Score: ' + score;
+
+        if(star.health <= 0){
+            this.particleBurst(star);
+            if(game.rnd.integerInRange(0, 4) == 3){
+                this.createPowerUp(star);
+            }
+            this.makeBody(star);
+            star.kill();
+            score += 10;
+            scoreText.text = 'Score: ' + score;
+            this.game.physics.arcade.isPaused = true;
+            this.game.time.events.add(40, this.unPause, this);
+        }
     },
 
     playerHit : function(player, star){
         player.kill();
         gameOver = true;
+        this.unPause();
         statusText.text = 'GAME OVER';
     },
 
     createStar : function(){
         var star = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy1');
+        star.health = 3;
         star.body.velocity.x = -200;
     },
 
     createSeeker: function(){
         var seeker = stars.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy3');
+        seeker.health = 3;
         this.game.physics.arcade.moveToObject(seeker, player, 400);
 
         //            this.game.physics.arcade.moveToObject(this.enemyLaser, player.ship, 150);
@@ -208,6 +238,7 @@ var playState = {
 
     createShooter: function(){
         var shooter = creepers.create(game.world.width, game.rnd.integerInRange(64, game.world.height - 64), 'Enemy2');
+        shooter.health = 3;
         shooter.body.velocity.x = -100;
         shooter.bulletCounter = 0;
         shooter.bulletTimer = 1;
@@ -231,9 +262,13 @@ var playState = {
 
     fireBullet : function(){
         if(bulletCounter <= 0){
-            var bullet = bullets.create(player.x, player.y, 'bullet');
-            bullet.body.velocity.x = 400 + (powerLevel * 50);
-            bulletCounter = bulletTimer - (powerLevel / 10);
+            this.cameraShake();
+            gunshot.play();
+            var bullet = bullets.create(player.x + 32, player.y + 15 + (game.rnd.integerInRange(-5, 5)), 'bullet');
+            bullet.body.velocity.x = 800;
+            bullet.body.gravity.y = game.rnd.integerInRange(-100,100);
+            bulletCounter = bulletTimer;
+            this.muzzleFlash(player);
         }
         bulletCounter -= 0.1;
     },
@@ -256,12 +291,29 @@ var playState = {
 
         particles.x = pointer.x;
         particles.y = pointer.y;
-
         particles.start(true, 4000, null, 10);
 
         //  And 2 seconds later we'll destroy the emitter
         this.game.time.events.add(2000, this.destroyEmitter, this, particles);
 
+    },
+
+    muzzleFlash : function(position){
+        var flashParticles = this.makeFlash();
+        flashParticles.x = position.x + 32;
+        flashParticles.y = position.y + 15;
+        flashParticles.start(true, 4000, null, 2);
+
+        this.game.time.events.add(100, this.destroyEmitter, this, flashParticles);
+    },
+
+    hitFlash : function(position){
+        var flashParts = this.makeFlash();
+        flashParts.x = position.x;
+        flashParts.y = position.y;
+        flashParts.start(true, 4000, null, 1);
+
+        this.game.time.events.add(100, this.destroyEmitter, this, flashParts);
     },
 
     destroyEmitter : function(inEmitter){
@@ -273,6 +325,39 @@ var playState = {
         emitter.makeParticles('debris');
         emitter.gravity = 200;
         return emitter;
+    },
+
+    makeFlash : function(){
+        flash = game.add.emitter(0,0,100);
+        flash.makeParticles('flash');
+        flash.gravity = 0;
+        return flash;
+    },
+
+    cameraShake : function(){
+        this.game.camera.x += game.rnd.integerInRange(-2,2);
+        this.game.camera.y += game.rnd.integerInRange(-2,2);
+        this.game.time.events.add(100, this.resetCamera, this);
+
+    },
+
+    resetCamera : function(){
+        this.game.camera.x = 0;
+        this.game.camera.y = 0;
+    },
+
+    unPause : function(){
+        this.game.physics.arcade.isPaused = false;
+    },
+
+    makeBody : function(object){
+        var corpse = bodies.create(object.x, object.y, object.key);
+        corpse.anchor.setTo(0.5, 0.5);
+        corpse.angle += 180 + game.rnd.integerInRange(-10, 10);
+
+        corpse.body.velocity.x = object.body.velocity.x;
+        corpse.body.gravity.y = 400;
+        corpse.outOfBoundsKill = true;
     }
 
 };
