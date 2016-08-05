@@ -22,6 +22,7 @@ var loadState = {
       game.load.image('TreeBG', 'assets/TreeBG.png');
 
       game.load.image('flash', 'assets/muzzleFlash.png');
+      game.load.image('lgboom', 'assets/LGBoom.png');
 
       game.load.audio('gunshot', 'assets/Gunshot.wav');
       game.load.audio('hitsound', 'assets/HitSound.wav');

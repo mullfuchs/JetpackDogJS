@@ -61,6 +61,7 @@ var playState = {
 
         gunshot = game.add.audio('gunshot');
         hitsound = game.add.audio('hitsound');
+        explosionSound = game.add.audio('explosion');
 
         scoreText = game.add.text(16, 20, 'Score: 0', { fontSize: '32px', fill: '#A2D187' });
 
@@ -190,6 +191,11 @@ var playState = {
         hitCounter++;
         if(star.health <= 0){
             this.particleBurst(star);
+            if(game.rnd.integerInRange(0, 3) == 3){
+                this.hitExplosion(star);
+                explosionSound.play();
+                this.harlemShake();
+            }
             if(game.rnd.integerInRange(0, 4) == 3){
                 this.createPowerUp(star);
             }
@@ -302,6 +308,14 @@ var playState = {
         this.game.time.events.add(100, this.destroyEmitter, this, flashParts);
     },
 
+    hitExplosion : function(position){
+        var explosion = this.makeExplosion();
+        explosion.x = position.x;
+        explosion.y = position.y;
+        explosion.start(true, 4000, null, 4);
+        this.game.time.events.add(200, this.destroyEmitter, this, explosion);
+    },
+
     destroyEmitter : function(inEmitter){
         inEmitter.destroy();
     },
@@ -318,13 +332,25 @@ var playState = {
         flash.makeParticles('flash');
         flash.gravity = 0;
         return flash;
+    },    
+
+    makeExplosion : function(){
+        flash = game.add.emitter(0,0,100);
+        flash.makeParticles('lgboom');
+        flash.gravity = 0;
+        return flash;
     },
 
     cameraShake : function(){
         this.game.camera.x += game.rnd.integerInRange(-2,2);
         this.game.camera.y += game.rnd.integerInRange(-2,2);
         this.game.time.events.add(100, this.resetCamera, this);
+    },    
 
+    harlemShake : function(){
+        this.game.camera.x += game.rnd.integerInRange(-10,10);
+        this.game.camera.y += game.rnd.integerInRange(-10,10);
+        this.game.time.events.add(100, this.resetCamera, this);
     },
 
     resetCamera : function(){
@@ -343,6 +369,7 @@ var playState = {
 
         corpse.body.velocity.x = object.body.velocity.x;
         corpse.body.gravity.y = 400;
+        corpse.body.bounce.set(0.3);
         corpse.outOfBoundsKill = true;
     }
 
