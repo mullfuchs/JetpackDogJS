@@ -1,4 +1,4 @@
 # JetpackDogJS
-A browser game
+## A browser game by Leo Burke
 
-This is a game made by me
+Jetpack dog is a recreation of a flash game I made a few years ago. It uses the [Phaser javascript game library](phaser.io). All graphics were done by me, with sounds created in the SFXR application. 
