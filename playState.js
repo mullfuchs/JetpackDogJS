@@ -11,6 +11,7 @@ var winDistance = 200;
 var bulletTimer = 0.3;
 var bulletCounter = 0;
 var gameOver = false;
+var dyingAnim = false;
 var pause = false;
 var bulletsFired = 0;
 var hitCounter = 0;
@@ -180,6 +181,7 @@ var playState = {
             }
         }
 
+
     },
 
     collectStar : function(bullet, star){
@@ -209,10 +211,9 @@ var playState = {
     },
 
     playerHit : function(player, star){
-        player.kill();
-        gameOver = true;
-        this.unPause();
-        statusText.text = 'GAME OVER';
+        this.slowMo();
+        //player.kill();
+
     },
 
     createStar : function(){
@@ -277,6 +278,7 @@ var playState = {
         distance = winDistance;
         powerLevel = 0;
         gameOver = false;
+        this.game.time.slowMotion = 1.0;
     },
 
     particleBurst : function(pointer) {
@@ -360,6 +362,23 @@ var playState = {
 
     unPause : function(){
         this.game.physics.arcade.isPaused = false;
+    },
+
+    slowMo : function(){
+        this.game.time.slowMotion = 2.0;
+        this.game.time.events.add(2000, this.resetTime, this);
+    },
+
+    resetTime: function(){
+        this.game.time.slowMotion = 1.0;
+        this.gameOverFunction();
+    },
+
+    gameOverFunction: function(){
+        gameOver = true;
+        dyingAnim = true;
+        this.unPause();
+        statusText.text = 'GAME OVER';
     },
 
     makeBody : function(object){

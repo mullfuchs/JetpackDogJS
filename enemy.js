@@ -49,3 +49,9 @@ Enemy.prototype.update = function () {
         }
 
 };
+
+var EnemyGroup = {};
+
+EnemyGroup.BasicEnemy = function(game){
+    
+}
