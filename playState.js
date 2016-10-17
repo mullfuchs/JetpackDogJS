@@ -211,6 +211,8 @@ var playState = {
     },
 
     playerHit : function(player, star){
+        this.particleBurst(player);
+        this.hitExplosion(player);
         this.slowMo();
         //player.kill();
 
