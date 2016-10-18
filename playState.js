@@ -169,6 +169,10 @@ var playState = {
             bulletCounter = 0;
         }
 
+        if(game.input.keyboard.isDown(Phaser.Keyboard.X)){
+            this.perfMeleeAttack(player);
+        }
+
         if(distance <= 0){
             statusText.text = "You Won!";
             game.state.start('winScreen');
@@ -267,6 +271,12 @@ var playState = {
             bulletsFired ++;
         }
         bulletCounter -= 0.1;
+    },
+
+    perfMeleeAttack : function(player){
+        explosionSound.play();
+        this.harlemShake();
+        this.muzzleFlash(player); 
     },
 
     collectPowerup : function(player, powerup){
