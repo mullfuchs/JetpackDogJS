@@ -15,6 +15,7 @@ var dyingAnim = false;
 var pause = false;
 var bulletsFired = 0;
 var hitCounter = 0;
+var inMelee = false;
 
 var playState = {
 
@@ -171,6 +172,10 @@ var playState = {
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.X)){
             this.perfMeleeAttack(player);
+            inMelee = true;
+        }
+        else{
+            inMelee = false;
         }
 
         if(distance <= 0){
@@ -214,10 +219,23 @@ var playState = {
         }
     },
 
+    enemyHitByMelee : function(enemy){
+        enemy.health = 0;
+        this.particleBurst(enemy);
+        this.makeBody(enemy);
+        enemy.kill();
+    },
+
     playerHit : function(player, star){
-        this.particleBurst(player);
-        this.hitExplosion(player);
-        this.slowMo();
+        if(!inMelee){
+            this.particleBurst(player);
+            this.hitExplosion(player);
+            this.slowMo();
+        }
+        else{
+            this.enemyHitByMelee(star);
+        }
+
         //player.kill();
 
     },
@@ -276,7 +294,8 @@ var playState = {
     perfMeleeAttack : function(player){
         explosionSound.play();
         this.harlemShake();
-        this.muzzleFlash(player); 
+        this.muzzleFlash(player);
+
     },
 
     collectPowerup : function(player, powerup){
