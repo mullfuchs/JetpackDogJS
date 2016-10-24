@@ -417,7 +417,7 @@ var playState = {
         corpse.anchor.setTo(0.5, 0.5);
         corpse.angle += 180 + game.rnd.integerInRange(-10, 10);
 
-        corpse.body.velocity.x = -80;
+        corpse.body.velocity.x = 150;
         corpse.body.gravity.y = 400;
         corpse.body.bounce.set(0.3);
         corpse.outOfBoundsKill = true;
