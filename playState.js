@@ -22,7 +22,7 @@ var playState = {
     create : function() {
 
         bulletCounter = bulletTimer;
-
+        //x
         game.add.sprite(0,0, 'sky');
 
         background = this.add.tileSprite(0,80,this.game.width, this.game.height,'Mountains2');
