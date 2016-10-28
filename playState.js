@@ -172,6 +172,7 @@ var playState = {
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.X)){
             if(!inMelee){
+              this.game.time.events.add(100, this.resetMelee, this);  
               this.perfMeleeAttack(player);
               inMelee = true;  
             }
