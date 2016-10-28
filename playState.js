@@ -22,7 +22,7 @@ var playState = {
     create : function() {
 
         bulletCounter = bulletTimer;
-        //x
+        //xyz
         game.add.sprite(0,0, 'sky');
 
         background = this.add.tileSprite(0,80,this.game.width, this.game.height,'Mountains2');
@@ -171,11 +171,13 @@ var playState = {
         }
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.X)){
-            this.perfMeleeAttack(player);
-            inMelee = true;
+            if(!inMelee){
+              this.perfMeleeAttack(player);
+              inMelee = true;  
+            }
         }
         else{
-            inMelee = false;
+            //inMelee = false;
         }
 
         if(distance <= 0){
@@ -403,6 +405,10 @@ var playState = {
     resetTime: function(){
         this.game.time.slowMotion = 1.0;
         this.gameOverFunction();
+    },
+
+    resetMelee: function(){
+        inMelee = false;
     },
 
     gameOverFunction: function(){
