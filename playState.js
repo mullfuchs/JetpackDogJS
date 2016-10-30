@@ -16,6 +16,7 @@ var pause = false;
 var bulletsFired = 0;
 var hitCounter = 0;
 var inMelee = false;
+var ammo = 420;
 
 var playState = {
 
@@ -69,7 +70,9 @@ var playState = {
 
         distanceText = game.add.text(200, 20, 'Distance: 0', { fontSize: '32px', fill: '#A2D187' });
 
-        powerText = game.add.text(450, 20, 'Power: 0', {fontSize: '32px', fill: '#A2D187'});
+        //powerText = game.add.text(450, 20, 'Power: 0', {fontSize: '32px', fill: '#A2D187'});
+
+        ammoText = game.add.text(450, 20, 'Ammo: 0', {fontSize: '32px', fill: '#000000'});
 
         statusText = game.add.text((game.world.width / 2) - 250, (game.world.height / 2) - 16, "", { fontSize: '100px', fill: '#070F00' });
 
@@ -167,7 +170,11 @@ var playState = {
         }
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.Z)){
-            this.fireBullet();
+            if(ammo > 0){
+                this.fireBullet();
+                ammo -= 1;
+                ammoText.text = 'Ammo: ' + ammo;
+            }
         }
         else{
             bulletCounter = 0;
@@ -308,13 +315,15 @@ var playState = {
     collectPowerup : function(player, powerup){
         powerup.kill();
         powerLevel += 1;
-        powerText.text = "Power: " + powerLevel;
+        ammo += 20;
+        ammoText.text = "Ammo: " + ammo;
     },
 
     resetScene : function(){
         score = 0;
         distance = winDistance;
         powerLevel = 0;
+        ammo = 420;
         gameOver = false;
         this.game.time.slowMotion = 1.0;
     },
