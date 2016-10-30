@@ -88,6 +88,9 @@ var playState = {
     },
 
     update : function() {
+        if(inMelee){
+            this.perfMeleeAttack(player);
+        }
         game.physics.arcade.collide(player, platforms);
         game.physics.arcade.collide(stars, platforms);
         game.physics.arcade.collide(bodies, platforms);
@@ -172,13 +175,14 @@ var playState = {
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.X)){
             if(!inMelee){
-              this.game.time.events.add(100, this.resetMelee, this);  
-              this.perfMeleeAttack(player);
+              this.game.time.events.add(500, this.resetMelee, this);
+              console.log('hit melee button');  
+              //this.perfMeleeAttack(player);
               inMelee = true;  
             }
         }
         else{
-            //inMelee = false;
+            
         }
 
         if(distance <= 0){
@@ -415,6 +419,7 @@ var playState = {
     gameOverFunction: function(){
         gameOver = true;
         dyingAnim = true;
+        inMelee = false;
         this.unPause();
         statusText.text = 'GAME OVER';
     },
