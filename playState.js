@@ -248,6 +248,8 @@ var playState = {
         }
         else{
             this.enemyHitByMelee(star);
+            ammo += 20;
+            ammoText.text = "Ammo " + ammo;
         }
 
         //player.kill();
@@ -307,7 +309,7 @@ var playState = {
 
     perfMeleeAttack : function(player){
         explosionSound.play();
-        this.harlemShake();
+        //this.harlemShake();
         this.muzzleFlash(player);
 
     },
