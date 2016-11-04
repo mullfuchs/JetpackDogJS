@@ -220,8 +220,6 @@ var playState = {
                 this.hitExplosion(star);
                 explosionSound.play();
                 this.harlemShake();
-            }
-            if(game.rnd.integerInRange(0, 4) == 3){
                 this.createPowerUp(star);
             }
             this.makeBody(star);
