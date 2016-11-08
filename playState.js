@@ -113,8 +113,8 @@ var playState = {
     initPlayer : function(){
         player = game.add.sprite(32, game.world.height - 150, 'jetpackDog');
         game.physics.arcade.enable(player);
-        player.body.bounce.y = 0.2;
-        player.body.gravity.y = 300;
+        //player.body.bounce.y = 0.2;
+        //player.body.gravity.y = 300;
         player.body.collideWorldBounds = true;
 
         return player;
@@ -155,19 +155,38 @@ var playState = {
         
         if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
         {
-            player.body.gravity.y = -500;
+            // player.body.gravity.y = -500;
             if(gameOver){
-                this.resetScene();
-                game.state.start('play');
-            }
+                 this.resetScene();
+                 game.state.start('play');
+             }
 
         }
         else
         {
             if(!gameOver){
-                player.body.gravity.y = 350;
+               // player.body.gravity.y = 350;
             }
         }
+
+        if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
+        {
+            player.y -= 5;
+            player.angle = -15;
+            //leftBtn.alpha = 0.6;
+        }
+        else if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
+        {
+            player.y += 5;
+            player.angle = 15;
+            //rightBtn.alpha = 0.6;
+        }
+        else
+        {
+            player.rotation = 0;
+        //leftBtn.alpha = rightBtn.alpha = 0;
+        }
+
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.Z)){
             if(ammo > 0){
