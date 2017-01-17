@@ -16,6 +16,7 @@ var pause = false;
 var bulletsFired = 0;
 var hitCounter = 0;
 var inMelee = false;
+var invincible = true;
 var ammo = 420;
 
 var playState = {
@@ -155,7 +156,7 @@ var playState = {
         
         if(game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR))
         {
-            // player.body.gravity.y = -500;
+            player.body.gravity.y = -500;
             if(gameOver){
                  this.resetScene();
                  game.state.start('play');
@@ -165,27 +166,27 @@ var playState = {
         else
         {
             if(!gameOver){
-               // player.body.gravity.y = 350;
+               player.body.gravity.y = 350;
             }
         }
 
-        if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
-        {
-            player.y -= 5;
-            player.angle = -15;
-            //leftBtn.alpha = 0.6;
-        }
-        else if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
-        {
-            player.y += 5;
-            player.angle = 15;
-            //rightBtn.alpha = 0.6;
-        }
-        else
-        {
-            player.rotation = 0;
-        //leftBtn.alpha = rightBtn.alpha = 0;
-        }
+        // if (game.input.keyboard.isDown(Phaser.Keyboard.UP))
+        // {
+        //     player.y -= 5;
+        //     player.angle = -15;
+        //     //leftBtn.alpha = 0.6;
+        // }
+        // else if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN))
+        // {
+        //     player.y += 5;
+        //     player.angle = 15;
+        //     //rightBtn.alpha = 0.6;
+        // }
+        // else
+        // {
+        //     player.rotation = 0;
+        // //leftBtn.alpha = rightBtn.alpha = 0;
+        // }
 
 
         if(game.input.keyboard.isDown(Phaser.Keyboard.Z)){
@@ -258,7 +259,7 @@ var playState = {
     },
 
     playerHit : function(player, star){
-        if(!inMelee){
+        if(!inMelee && !invincible){
             this.particleBurst(player);
             this.hitExplosion(player);
             this.slowMo();
